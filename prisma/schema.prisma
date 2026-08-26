@@ -1,0 +1,161 @@
+// NakaTenis — schema de dados
+// Dinheiro sempre em centavos (Int). Nunca Float.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// ─── Autenticação e clientes ──────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  phone         String?
+  cpf           String?   @unique
+  role          Role      @default(USER)
+  addresses     Address[]
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([role])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String? // "Casa", "Trabalho"
+  recipient  String
+  zipCode    String
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  state      String   @db.Char(2)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Models exigidos pelo @auth/prisma-adapter
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Catálogo ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?
+  position    Int       @default(0)
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, position])
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  shortDescription String         @db.VarChar(200)
+  description      String         @db.Text
+  price            Int // centavos — valor atual
+  compareAtPrice   Int? // centavos — valor antigo
+  paymentInfo      String         @db.Text
+  brand            String?
+  sku              String?        @unique
+  stock            Int            @default(0)
+  isActive         Boolean        @default(true)
+  isFeatured       Boolean        @default(false)
+  categoryId       String
+  category         Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images           ProductImage[]
+  specs            Json? // [{ label, value }]
+  metaTitle        String?
+  metaDescription  String?        @db.VarChar(160)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([categoryId, isActive])
+  @@index([isFeatured, isActive])
+  @@index([createdAt])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String
+  alt       String?
+  width     Int?
+  height    Int?
+  position  Int     @default(0)
+
+  @@index([productId, position])
+}
+
+model AboutPage {
+  id        String   @id @default("singleton")
+  title     String
+  content   String   @db.Text
+  images    Json? // [{ url, publicId, alt, caption }]
+  updatedAt DateTime @updatedAt
+}

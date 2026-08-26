@@ -1,0 +1,34 @@
+# NakaTenis
+
+> Loja de artigos esportivos especializada em tênis e beach tennis, em Santa Fé do Sul (SP).
+> Vitrine online com fechamento de pedido pelo WhatsApp — o site não processa pagamento.
+
+## O que vendemos
+
+- **Raquetes** — raquetes de tênis e de beach tennis (fibra de carbono, fibra de vidro, híbridas), em pesos de 290g a 340g.
+- **Calçados** — tênis para quadra rápida, saibro e areia, numeração 34 ao 44.
+- **Roupas** — camisetas dry-fit, shorts, saias e vestidos de jogo, tamanhos P ao GG.
+- **Acessórios** — bolas de tênis e de beach tennis, overgrips, antivibradores, cordas, raqueteiras e mochilas.
+
+## Faixa de preço
+
+De R$ 19,90 (acessórios) a R$ 1.499,90 (raquetes profissionais). Parcelamento em até 12x sem juros e à vista no Pix.
+
+## Como comprar
+
+1. Navegue pelo catálogo em https://nakatenis.com.br
+2. Adicione os itens ao carrinho (não é necessário criar conta).
+3. Clique em "Finalizar pedido pelo WhatsApp". O carrinho vira uma mensagem pronta.
+4. O atendimento confirma disponibilidade, frete e pagamento pelo WhatsApp +55 17 99181-4042.
+
+## Região atendida
+
+Loja física em Santa Fé do Sul/SP, atendendo também a região noroeste paulista (Jales, Votuporanga, Fernandópolis) e o entorno de Três Fronteiras. Entrega combinada por WhatsApp: retirada na loja, entrega local e envio para todo o Brasil.
+
+## Links
+
+- Site: https://nakatenis.com.br
+- Instagram: https://www.instagram.com/nakamuraflavio/
+- Sitemap: https://nakatenis.com.br/sitemap.xml
+- Quem somos: https://nakatenis.com.br/quem-somos
+- WhatsApp: https://wa.me/5517991814042
