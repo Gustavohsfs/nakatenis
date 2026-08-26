@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ShoppingBag } from "lucide-react";
 import { getSessionUser } from "@/lib/auth/guards";
-import { dataSource } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { SignInForm } from "./sign-in-form";
@@ -43,16 +42,6 @@ export default async function SignInPage({ searchParams }: PageProps<"/entrar">)
           <SignInForm callbackUrl={callbackUrl} errorFromUrl={raw.error} />
         </CardContent>
       </Card>
-
-      {dataSource === "mock" ? (
-        <div className="rounded-xl border border-dashed border-brand-300 bg-brand-50 px-4 py-3.5 text-[13px] text-brand-900">
-          <p className="font-semibold">Contas de demonstração (modo mock)</p>
-          <ul className="mt-1.5 space-y-0.5 font-mono text-[12.5px]">
-            <li>admin@nakatenis.com.br · admin123 (administrador)</li>
-            <li>cliente@nakatenis.com.br · cliente123 (cliente)</li>
-          </ul>
-        </div>
-      ) : null}
 
       <p className="flex items-center justify-center gap-2 text-center text-[13.5px] text-ink-muted">
         <ShoppingBag className="size-4 shrink-0" aria-hidden="true" />
