@@ -210,10 +210,12 @@ export const mockProductRepo: ProductRepository = {
     const index = db.products.findIndex((p) => p.id === id);
     if (index === -1) throw new Error("Produto não encontrado.");
     const current = db.products[index];
+    // A URL fica estável na edição: só muda se um slug for enviado explícito.
+    // Mudar o título não quebra links já compartilhados no WhatsApp.
     const slug =
-      input.slug !== undefined || input.title !== undefined
+      input.slug !== undefined
         ? uniqueSlug(
-            input.slug?.trim() || input.title || current.title,
+            input.slug.trim() || input.title || current.title,
             db.products.filter((p) => p.id !== id).map((p) => p.slug),
           )
         : current.slug;

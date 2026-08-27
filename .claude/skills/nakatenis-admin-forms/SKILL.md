@@ -41,8 +41,9 @@ Formulários simples (login, endereço, perfil) usam `useActionState` + `<form a
 - **Máscara de moeda**: `<CurrencyInput value={cents} onValueChange={...} />`. Entra e sai em **centavos**. Use `Controller` do RHF.
 - **Preview de desconto ao vivo**: bloco "Como aparece na vitrine" no `ProductForm`. Valor antigo `<=` valor atual → aviso âmbar ("será ignorado na vitrine"), e o `refine` do schema bloqueia o submit.
 - **Upload múltiplo**: `<ImageUploader images onChange folder max />` — drag-and-drop, preview, reordenação por setas, "tornar principal" (posição 0), remoção (que apaga do storage via `deleteUploadedImageAction`) e campo de texto alternativo por imagem.
-- **Slug**: gerado do título enquanto o campo não for tocado à mão; colisão resolvida no repositório com sufixo `-2`, `-3`.
-- **Contador de caracteres**: descrição curta 200, meta description 160. Vira âmbar perto do limite.
+- **Slug**: não existe campo no formulário. Gerado do título na criação (colisão vira sufixo `-2`, `-3`) e **estável na edição** — mudar o título não muda a URL, para não quebrar links já compartilhados no WhatsApp. O hint sob o título mostra o endereço.
+- **Contador de caracteres**: descrição curta 200. Vira âmbar perto do limite.
+- **SEO**: sem campos manuais. `generateMetadata` usa título + descrição curta como fallback; `metaTitle`/`metaDescription` continuam no schema do banco caso um dia voltem ao formulário.
 - **Exclusão**: sempre `<ConfirmDialog>`, com o nome do registro e a consequência escrita ("junto com N imagens no storage"). Excluir produto remove as imagens do storage antes do registro — depois não há mais `publicId`.
 - **`useWatch({ control, name })`**, não `watch()` — o `watch()` faz o React Compiler pular a memoização do componente inteiro.
 

@@ -39,7 +39,6 @@ export const DEFAULT_PAYMENT_INFO =
 const formSchema = z
   .object({
     title: z.string().trim().min(3, "Informe um título com pelo menos 3 caracteres."),
-    slug: z.string().trim(),
     shortDescription: z
       .string()
       .trim()
@@ -58,8 +57,6 @@ const formSchema = z
     isActive: z.boolean(),
     isFeatured: z.boolean(),
     categoryId: z.string().trim().min(1, "Escolha uma categoria."),
-    metaTitle: z.string().trim(),
-    metaDescription: z.string().trim().max(160, "Máximo de 160 caracteres."),
     specs: z.array(
       z.object({
         label: z.string().trim(),
@@ -94,20 +91,17 @@ export function ProductForm({
       position: image.position,
     })) ?? [],
   );
-  const [slugTouched, setSlugTouched] = useState(Boolean(product));
   const [saving, startSaving] = useTransition();
 
   const {
     register,
     handleSubmit,
     control,
-    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: product?.title ?? "",
-      slug: product?.slug ?? "",
       shortDescription: product?.shortDescription ?? "",
       description: product?.description ?? "",
       price: product?.price ?? 0,
@@ -119,8 +113,6 @@ export function ProductForm({
       isActive: product?.isActive ?? true,
       isFeatured: product?.isFeatured ?? false,
       categoryId: product?.categoryId ?? categories[0]?.id ?? "",
-      metaTitle: product?.metaTitle ?? "",
-      metaDescription: product?.metaDescription ?? "",
       specs: product?.specs.length ? product.specs : [{ label: "", value: "" }],
     },
   });
@@ -129,11 +121,9 @@ export function ProductForm({
 
   // useWatch (e não watch()) para o React Compiler conseguir memoizar o form.
   const title = useWatch({ control, name: "title" });
-  const slug = useWatch({ control, name: "slug" });
   const price = useWatch({ control, name: "price" });
   const compareAtPrice = useWatch({ control, name: "compareAtPrice" });
   const shortDescription = useWatch({ control, name: "shortDescription" });
-  const metaDescription = useWatch({ control, name: "metaDescription" });
 
   const discount = getDiscount(price, compareAtPrice || null);
   const savings = getSavings(price, compareAtPrice || null);
@@ -145,7 +135,9 @@ export function ProductForm({
       const result = await saveProductAction({
         id: product?.id,
         title: values.title,
-        slug: values.slug || slugify(values.title),
+        // Na criação a URL nasce do título; na edição ela fica estável para não
+        // quebrar links já compartilhados no WhatsApp.
+        slug: product ? undefined : slugify(values.title),
         shortDescription: values.shortDescription,
         description: values.description,
         price: values.price,
@@ -159,8 +151,6 @@ export function ProductForm({
         categoryId: values.categoryId,
         images: images.map((image, index) => ({ ...image, position: index })),
         specs: values.specs.filter((spec) => spec.label && spec.value),
-        metaTitle: values.metaTitle || null,
-        metaDescription: values.metaDescription || null,
       });
 
       if (!result.ok) {
@@ -210,28 +200,13 @@ export function ProductForm({
                 <Label htmlFor="title">Título</Label>
                 <Input
                   id="title"
-                  {...register("title", {
-                    onChange: (event) => {
-                      if (!slugTouched) {
-                        setValue("slug", slugify(event.target.value));
-                      }
-                    },
-                  })}
+                  {...register("title")}
                   aria-invalid={Boolean(errors.title)}
                 />
                 <FieldError>{errors.title?.message}</FieldError>
-              </Field>
-
-              <Field>
-                <Label htmlFor="slug">Slug (URL)</Label>
-                <Input
-                  id="slug"
-                  {...register("slug", {
-                    onChange: () => setSlugTouched(true),
-                  })}
-                />
                 <FieldHint>
-                  /produto/{slug || slugify(title) || "titulo-do-produto"}
+                  Endereço na loja: /produto/
+                  {product ? product.slug : slugify(title) || "titulo-do-produto"}
                 </FieldHint>
               </Field>
 
@@ -334,38 +309,6 @@ export function ProductForm({
                 <Plus aria-hidden="true" />
                 Adicionar linha
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* ─── SEO ────────────────────────────────────────────────────── */}
-          <Card>
-            <CardHeader>
-              <CardTitle>SEO</CardTitle>
-              <CardDescription>
-                Deixe em branco para usar o título e a descrição curta.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Field>
-                <Label htmlFor="metaTitle">Meta title</Label>
-                <Input id="metaTitle" {...register("metaTitle")} />
-              </Field>
-              <Field>
-                <Label htmlFor="metaDescription">Meta description</Label>
-                <Textarea
-                  id="metaDescription"
-                  rows={2}
-                  maxLength={160}
-                  {...register("metaDescription")}
-                  aria-invalid={Boolean(errors.metaDescription)}
-                />
-                <div className="flex items-center justify-between gap-2">
-                  <FieldError>{errors.metaDescription?.message}</FieldError>
-                  <span className="ml-auto text-[13px] text-ink-muted">
-                    {metaDescription.length}/160
-                  </span>
-                </div>
-              </Field>
             </CardContent>
           </Card>
         </div>
@@ -490,8 +433,8 @@ export function ProductForm({
                   <Input id="brand" {...register("brand")} />
                 </Field>
                 <Field>
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input id="sku" {...register("sku")} />
+                  <Label htmlFor="sku">Código interno (SKU)</Label>
+                  <Input id="sku" placeholder="Ex.: NKP-BT-340" {...register("sku")} />
                 </Field>
               </div>
 

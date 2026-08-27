@@ -262,8 +262,10 @@ export const prismaProductRepo: ProductRepository = {
 
   async update(id, input) {
     const prisma = getPrisma();
+    // A URL fica estável na edição: só muda se um slug for enviado explícito.
+    // Mudar o título não quebra links já compartilhados no WhatsApp.
     let slug: string | undefined;
-    if (input.slug !== undefined || input.title !== undefined) {
+    if (input.slug !== undefined) {
       const current = await prisma.product.findUniqueOrThrow({
         where: { id },
         select: { title: true },
@@ -273,7 +275,7 @@ export const prismaProductRepo: ProductRepository = {
         select: { slug: true },
       });
       slug = uniqueSlug(
-        input.slug?.trim() || input.title || current.title,
+        input.slug.trim() || input.title || current.title,
         others.map((p) => p.slug),
       );
     }

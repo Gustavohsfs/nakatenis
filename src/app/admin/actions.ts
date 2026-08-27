@@ -49,12 +49,13 @@ const productSchema = z
     categoryId: z.string().trim().min(1, "Escolha uma categoria."),
     images: z.array(imageSchema),
     specs: z.array(specSchema),
-    metaTitle: z.string().trim().nullable(),
+    metaTitle: z.string().trim().nullable().optional(),
     metaDescription: z
       .string()
       .trim()
       .max(160, "A meta description tem no máximo 160 caracteres.")
-      .nullable(),
+      .nullable()
+      .optional(),
   })
   .refine(
     (data) => !data.compareAtPrice || data.compareAtPrice > data.price,
