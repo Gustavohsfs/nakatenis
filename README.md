@@ -112,6 +112,19 @@ src/
 
 ---
 
+## Imagens
+
+Produção usa **Cloudinary**, com duas escolhas que valem entender:
+
+1. **O upload vai do browser direto para o Cloudinary.** O servidor só assina (`createUploadTicketAction` → ticket com `public_id` sorteado e assinatura válida para um arquivo). O arquivo nunca passa pela aplicação, o que contorna o limite de body do host e o limite de **1 MB do body de Server Action** do Next — foto de produto estoura os dois, e o erro que aparece é confuso.
+2. **O resize e a conversão para WebP/AVIF saem do CDN**, não do nosso servidor. `next.config.ts` usa `images.loader: "custom"` apontando para `src/lib/images/loader.ts`, que injeta `f_auto,q_auto,c_limit,w_<width>` na URL do Cloudinary. Sem isso, `/_next/image` faria o resize na nossa CPU — o oposto do motivo de usar Cloudinary num plano compartilhado.
+
+`publicId` é gravado junto com a `url` no banco: sem ele não dá para apagar o asset quando o produto sai.
+
+Em desenvolvimento, `STORAGE_DRIVER=local` grava em `public/uploads` e o upload volta a passar por `/api/upload` — o servidor responde `mode: "proxy"` e o cliente se adapta sozinho.
+
+---
+
 ## Decisões que valem lembrar
 
 - **Dinheiro em centavos (`Int`).** Nunca `Float`. Formatação só por `formatBRL`.

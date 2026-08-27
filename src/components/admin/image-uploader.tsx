@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   ArrowRight,
   ImagePlus,
-  Loader2,
   Star,
   Trash2,
   UploadCloud,
@@ -14,6 +13,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, Badge, Input, Label } from "@/components/ui";
 import { deleteUploadedImageAction } from "@/app/admin/actions";
+import {
+  createUploadTicketAction,
+  type UploadFolder,
+} from "@/app/admin/upload-actions";
+import {
+  uploadDirect,
+  uploadThroughApp,
+  validateFile,
+} from "@/lib/storage/direct-upload-client";
 import { cn } from "@/lib/utils";
 
 export type UploaderImage = {
@@ -25,9 +33,17 @@ export type UploaderImage = {
   position: number;
 };
 
+type Pending = { name: string; percent: number };
+
 /**
  * Upload múltiplo com drag-and-drop, preview, reordenação e definição da
  * imagem principal (posição 0). Remover apaga também do storage.
+ *
+ * Com o Cloudinary, o arquivo vai do browser DIRETO para o provedor: o servidor
+ * só assina o envio. Isso evita o limite de body do host e o limite de 1 MB do
+ * body de Server Action — foto de produto estoura os dois. Com o driver local
+ * (dev), o servidor devolve `mode: "proxy"` e o arquivo volta a passar por
+ * /api/upload.
  */
 export function ImageUploader({
   images,
@@ -37,53 +53,86 @@ export function ImageUploader({
 }: {
   images: UploaderImage[];
   onChange: (images: UploaderImage[]) => void;
-  folder?: "produtos" | "quem-somos" | "categorias";
+  folder?: UploadFolder;
   max?: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [uploading, setUploading] = useState(0);
+  const [pending, setPending] = useState<Pending[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   function reindex(list: UploaderImage[]) {
     return list.map((image, index) => ({ ...image, position: index }));
   }
 
+  function setProgress(name: string, percent: number) {
+    setPending((current) =>
+      current.map((p) => (p.name === name ? { ...p, percent } : p)),
+    );
+  }
+
   async function uploadFiles(files: FileList | File[]) {
     const list = Array.from(files);
-    const room = max - images.length;
+    const room = max - images.length - pending.length;
     if (room <= 0) {
       setError(`Limite de ${max} imagens atingido.`);
       return;
     }
-    const selected = list.slice(0, room);
-    setError(list.length > room ? `Só cabem mais ${room} imagem(ns).` : null);
-    setUploading((n) => n + selected.length);
+
+    const problems: string[] = [];
+    if (list.length > room) problems.push(`Só cabem mais ${room} imagem(ns).`);
+
+    const selected: File[] = [];
+    for (const file of list.slice(0, room)) {
+      const problem = validateFile(file);
+      if (problem) problems.push(problem);
+      else selected.push(file);
+    }
+
+    setError(problems.length > 0 ? problems.join(" ") : null);
+    if (selected.length === 0) return;
+
+    setPending((current) => [
+      ...current,
+      ...selected.map((file) => ({ name: file.name, percent: 0 })),
+    ]);
 
     const uploaded: UploaderImage[] = [];
+
     for (const file of selected) {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("folder", folder);
       try {
-        const response = await fetch("/api/upload", { method: "POST", body });
-        const data = await response.json();
-        if (!response.ok) {
-          setError(data.error ?? "Falha no upload.");
-        } else {
-          uploaded.push({
-            url: data.url,
-            publicId: data.publicId,
-            alt: null,
-            width: data.width || null,
-            height: data.height || null,
-            position: 0,
-          });
+        const ticket = await createUploadTicketAction({
+          folder,
+          contentType: file.type,
+          size: file.size,
+        });
+
+        if (!ticket.ok) {
+          setError(ticket.message);
+          continue;
         }
-      } catch {
-        setError("Falha de rede ao enviar a imagem.");
+
+        const result =
+          ticket.mode === "direct"
+            ? await uploadDirect(file, ticket.ticket, (p) => setProgress(file.name, p))
+            : await uploadThroughApp(file, folder, (p) => setProgress(file.name, p));
+
+        uploaded.push({
+          url: result.url,
+          publicId: result.publicId,
+          alt: null,
+          width: result.width || null,
+          height: result.height || null,
+          position: 0,
+        });
+      } catch (uploadError) {
+        setError(
+          uploadError instanceof Error
+            ? `"${file.name}": ${uploadError.message}`
+            : `Falha ao enviar "${file.name}".`,
+        );
       } finally {
-        setUploading((n) => Math.max(0, n - 1));
+        setPending((current) => current.filter((p) => p.name !== file.name));
       }
     }
 
@@ -164,22 +213,49 @@ export function ImageUploader({
             event.target.value = "";
           }}
         />
-        {uploading > 0 ? (
-          <p className="flex items-center gap-2 text-[13px] font-medium text-brand-600">
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Enviando {uploading} imagem(ns)…
-          </p>
-        ) : null}
       </div>
+
+      {pending.length > 0 ? (
+        <ul className="space-y-2" aria-live="polite">
+          {pending.map((item) => (
+            <li
+              key={item.name}
+              className="rounded-lg border border-line bg-surface px-3.5 py-2.5"
+            >
+              <div className="flex items-center justify-between gap-3 text-[13px]">
+                <span className="truncate font-medium text-ink">{item.name}</span>
+                <span className="shrink-0 tabular-nums text-ink-muted">
+                  {item.percent}%
+                </span>
+              </div>
+              <div
+                className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
+                role="progressbar"
+                aria-valuenow={item.percent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`Enviando ${item.name}`}
+              >
+                <div
+                  className="h-full rounded-full bg-brand-500 transition-[width] duration-200"
+                  style={{ width: `${item.percent}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {error ? <Alert variant="danger">{error}</Alert> : null}
 
-      {images.length === 0 ? (
+      {images.length === 0 && pending.length === 0 ? (
         <p className="flex items-center gap-2 rounded-lg bg-surface-alt px-3 py-2.5 text-[13px] text-ink-muted">
           <ImagePlus className="size-4" aria-hidden="true" />
           Sem imagem, o produto aparece com um placeholder na vitrine.
         </p>
-      ) : (
+      ) : null}
+
+      {images.length > 0 ? (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {images.map((image, index) => (
             <li
@@ -278,7 +354,7 @@ export function ImageUploader({
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

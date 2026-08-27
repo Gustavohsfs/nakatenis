@@ -5,13 +5,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "picsum.photos" },
-    ],
+    // Loader próprio: a transformação vira parâmetro na URL do Cloudinary e
+    // quem redimensiona é o CDN deles. Sem isto, /_next/image faria o resize
+    // no nosso servidor — o que mais consome CPU num plano compartilhado.
+    loader: "custom",
+    loaderFile: "./src/lib/images/loader.ts",
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
     qualities: [60, 75, 90],
-    formats: ["image/avif", "image/webp"],
   },
   async headers() {
     return [

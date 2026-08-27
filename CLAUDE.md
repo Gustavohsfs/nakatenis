@@ -22,7 +22,8 @@ E-commerce vitrine de artigos esportivos para tênis e beach tennis. **O site n�
 5. **Nunca commitar `.env`.** Só `.env.example`.
 6. **`stock` não bloqueia a compra.** O fechamento é humano, no WhatsApp. Serve para "últimas unidades" e organização do lojista — não implementar reserva de estoque.
 7. **Não bloquear compra atrás de login.** Usuário anônimo navega, monta carrinho e finaliza no WhatsApp. Login é opcional e só acrescenta o endereço à mensagem.
-8. Antes de dar qualquer fase por concluída: `npm run lint && npx tsc --noEmit && npm run build`.
+8. **Imagem nunca é processada pelo nosso servidor.** O upload vai do browser direto para o Cloudinary (ticket assinado por `createUploadTicketAction`), e o resize/WebP/AVIF sai do CDN deles via `src/lib/images/loader.ts`. Não reintroduzir `/_next/image` nem processar imagem em Route Handler: o plano tem CPU/RAM compartilhadas.
+9. Antes de dar qualquer fase por concluída: `npm run lint && npx tsc --noEmit && npm run build`.
 
 ## Tokens de cor (§ design system)
 
@@ -69,7 +70,8 @@ Contas de demonstração (só no modo mock): `admin@nakatenis.com.br / admin123`
 ```
 src/lib/data/        contratos + repositórios mock e prisma (única porta para dados)
 src/lib/auth/        Auth.js, guards, schemas zod, hash, rate limit
-src/lib/storage/     StorageAdapter (local | cloudinary), trocado por STORAGE_DRIVER
+src/lib/storage/     StorageAdapter (local | cloudinary) + upload direto assinado
+src/lib/images/      loader do next/image — transformação vai para o CDN
 src/lib/whatsapp/    builder da mensagem de checkout
 src/lib/seo/         metadata helpers, JSON-LD, FAQ
 src/lib/pricing.ts   desconto, BRL, parcelamento — dinheiro passa aqui
