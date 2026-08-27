@@ -15,7 +15,7 @@ Passo a passo completo em `deploy/README.md`. Esta skill é o checklist.
 | `DATABASE_URL` | conexão **pooled** (Neon: host com `-pooler`) |
 | `DIRECT_URL` | conexão **direta**, usada pelas migrations |
 | `AUTH_SECRET` / `NEXTAUTH_SECRET` | mesmo valor; `openssl rand -base64 32` |
-| `AUTH_URL` / `NEXTAUTH_URL` | `https://nakatenis.com.br` |
+| `AUTH_URL` / `NEXTAUTH_URL` | `https://nakatenis.com` |
 | `AUTH_TRUST_HOST` | `true` (atrás do Nginx) |
 | `NEXT_PUBLIC_SITE_URL` | domínio final — **sitemap, canonical e links do WhatsApp dependem disso** |
 | `NEXT_PUBLIC_SITE_NAME` | `NakaTenis` |
@@ -62,7 +62,7 @@ Pede a senha no prompt, sem eco. **Nunca criar admin no seed.**
 
 ## Verificação pós-deploy
 
-1. `https://nakatenis.com.br` responde 200 e o header renderiza sem layout shift.
+1. `https://nakatenis.com` responde 200 e o header renderiza sem layout shift.
 2. `/sitemap.xml` traz o domínio final (não localhost).
 3. Um produto na PDP → "Comprar agora" abre `wa.me` com a mensagem correta.
 4. `/admin` responde 404 para usuário comum e abre para o admin.

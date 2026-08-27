@@ -46,9 +46,9 @@ Preencha **todas** as chaves. Atenção especial:
 | `DATABASE_URL` | conexão **pooled** do Neon (host com `-pooler`) |
 | `DIRECT_URL` | conexão **direta** (sem `-pooler`) — usada pelas migrations |
 | `AUTH_SECRET` e `NEXTAUTH_SECRET` | mesmo valor: `openssl rand -base64 32` |
-| `AUTH_URL` e `NEXTAUTH_URL` | `https://nakatenis.com.br` |
+| `AUTH_URL` e `NEXTAUTH_URL` | `https://nakatenis.com` |
 | `AUTH_TRUST_HOST` | `true` |
-| `NEXT_PUBLIC_SITE_URL` | `https://nakatenis.com.br` |
+| `NEXT_PUBLIC_SITE_URL` | `https://nakatenis.com` |
 | `STORAGE_DRIVER` | `local` ou `cloudinary` |
 
 > `NEXT_PUBLIC_*` é **embutido no build**. Mudou o domínio? Rebuild — reiniciar o PM2 não basta.
@@ -66,7 +66,7 @@ npm run build
 Crie o primeiro administrador (nunca há admin no seed):
 
 ```bash
-npm run create-admin -- --email=admin@nakatenis.com.br --name="Flávio Nakamura"
+npm run create-admin -- --email=admin@nakatenis.com --name="Flávio Nakamura"
 # a senha é pedida no prompt, sem eco
 ```
 
@@ -91,7 +91,7 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 7. HTTPS
 
 ```bash
-sudo certbot --nginx -d nakatenis.com.br -d www.nakatenis.com.br
+sudo certbot --nginx -d nakatenis.com -d www.nakatenis.com
 sudo systemctl status certbot.timer     # renovação automática
 ```
 
@@ -138,7 +138,7 @@ npm run deploy     # npm ci + generate + migrate deploy + build + pm2 reload
 
 ## Verificação pós-deploy
 
-1. `https://nakatenis.com.br` responde 200; o header não pisca ao hidratar.
+1. `https://nakatenis.com` responde 200; o header não pisca ao hidratar.
 2. `/sitemap.xml` traz o domínio final (não `localhost`).
 3. Na PDP, "Comprar agora" abre o `wa.me` com a mensagem formatada e o link absoluto do produto.
 4. `/admin` responde **404** para usuário comum e abre para o admin.
