@@ -15,20 +15,47 @@ const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: "newest", label: "Novidades" },
 ];
 
+export type CatalogState = {
+  sort: ProductSort;
+  /** centavos, ou null quando o filtro está limpo */
+  min: number | null;
+  max: number | null;
+};
+
 export function CatalogControls({
   total,
   priceRange,
+  value,
+  onValueChange,
 }: {
   total: number;
   priceRange: { min: number; max: number };
+  /**
+   * Modo controlado (client-side): o pai é dono do estado e nada vai à rede.
+   * Sem estes props, o componente segue o modo original — filtros na URL,
+   * navegação servidor (usado pela busca).
+   */
+  value?: CatalogState;
+  onValueChange?: (next: CatalogState) => void;
 }) {
+  const controlled = Boolean(value && onValueChange);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const currentSort = (searchParams.get("ordem") as ProductSort) ?? "relevance";
-  const currentMin = searchParams.get("min");
-  const currentMax = searchParams.get("max");
+  const currentSort = controlled
+    ? value!.sort
+    : ((searchParams.get("ordem") as ProductSort) ?? "relevance");
+  const currentMin = controlled
+    ? value!.min !== null
+      ? String(value!.min)
+      : null
+    : searchParams.get("min");
+  const currentMax = controlled
+    ? value!.max !== null
+      ? String(value!.max)
+      : null
+    : searchParams.get("max");
 
   const [open, setOpen] = useState(false);
   const [min, setMin] = useState(currentMin ? formatBRL(Number(currentMin)) : "");
@@ -50,6 +77,45 @@ export function CatalogControls({
     params.delete("pagina"); // qualquer mudança de filtro volta para a página 1
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+
+  function applySort(sort: ProductSort) {
+    if (controlled) {
+      onValueChange!({ ...value!, sort });
+      return;
+    }
+    pushParams((params) => {
+      if (sort === "relevance") params.delete("ordem");
+      else params.set("ordem", sort);
+    });
+  }
+
+  function applyPrice(minCents: number, maxCents: number) {
+    if (controlled) {
+      onValueChange!({
+        ...value!,
+        min: minCents > 0 ? minCents : null,
+        max: maxCents > 0 ? maxCents : null,
+      });
+      return;
+    }
+    pushParams((params) => {
+      if (minCents > 0) params.set("min", String(minCents));
+      else params.delete("min");
+      if (maxCents > 0) params.set("max", String(maxCents));
+      else params.delete("max");
+    });
+  }
+
+  function clearPrice() {
+    if (controlled) {
+      onValueChange!({ ...value!, min: null, max: null });
+      return;
+    }
+    pushParams((params) => {
+      params.delete("min");
+      params.delete("max");
+    });
   }
 
   const hasPriceFilter = Boolean(currentMin || currentMax);
@@ -80,12 +146,7 @@ export function CatalogControls({
             id="ordenacao"
             className="h-9 w-40 text-[13px]"
             value={currentSort}
-            onChange={(event) =>
-              pushParams((params) => {
-                if (event.target.value === "relevance") params.delete("ordem");
-                else params.set("ordem", event.target.value);
-              })
-            }
+            onChange={(event) => applySort(event.target.value as ProductSort)}
           >
             {SORT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -101,14 +162,7 @@ export function CatalogControls({
           className="animate-fade-up flex flex-wrap items-end gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-4"
           onSubmit={(event) => {
             event.preventDefault();
-            pushParams((params) => {
-              const minCents = parseBRLToCents(min);
-              const maxCents = parseBRLToCents(max);
-              if (minCents > 0) params.set("min", String(minCents));
-              else params.delete("min");
-              if (maxCents > 0) params.set("max", String(maxCents));
-              else params.delete("max");
-            });
+            applyPrice(parseBRLToCents(min), parseBRLToCents(max));
             setOpen(false);
           }}
         >
@@ -149,10 +203,7 @@ export function CatalogControls({
               onClick={() => {
                 setMin("");
                 setMax("");
-                pushParams((params) => {
-                  params.delete("min");
-                  params.delete("max");
-                });
+                clearPrice();
                 setOpen(false);
               }}
             >

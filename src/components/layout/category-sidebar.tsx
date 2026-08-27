@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   Backpack,
   Footprints,
@@ -31,18 +32,31 @@ export function CategoryNav({
 }) {
   const pathname = usePathname();
 
+  // Feedback otimista: marca o item NO CLIQUE, sem esperar a navegação
+  // terminar — é o que dá a sensação de resposta imediata no menu. O pendente
+  // é limpo durante o render quando a rota efetivamente muda.
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setPendingHref(null);
+  }
+
   return (
     <nav aria-label="Categorias" className={className}>
       <ul className="space-y-0.5">
         {categories.map((category) => {
           const href = `/categoria/${category.slug}`;
-          const active = pathname === href;
+          const active = pendingHref ? pendingHref === href : pathname === href;
           const Icon = ICONS[category.icon ?? ""] ?? Tag;
           return (
             <li key={category.id}>
               <Link
                 href={href}
-                onClick={onNavigate}
+                onClick={() => {
+                  setPendingHref(href);
+                  onNavigate?.();
+                }}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",

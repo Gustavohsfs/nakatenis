@@ -1,6 +1,5 @@
 import { cache } from "react";
 import { categoryRepo, productRepo } from "./index";
-import type { ProductSort } from "./types";
 
 /**
  * Dedupe por requisição (React cache).
@@ -26,13 +25,6 @@ export const getProductBySlugCached = cache((slug: string) =>
   productRepo.getBySlug(slug),
 );
 
-export const listCategoryPageCached = cache(
-  (
-    slug: string,
-    page: number,
-    perPage: number,
-    sort: ProductSort,
-    minPrice?: number,
-    maxPrice?: number,
-  ) => productRepo.listByCategory(slug, { page, perPage, sort, minPrice, maxPrice }),
+export const getCategoryProductsCached = cache((slug: string) =>
+  productRepo.list({ categorySlug: slug }),
 );
