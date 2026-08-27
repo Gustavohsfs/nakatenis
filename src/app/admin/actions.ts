@@ -37,7 +37,7 @@ const productSchema = z
       .trim()
       .min(10, "A descrição curta precisa de ao menos 10 caracteres.")
       .max(200, "A descrição curta tem no máximo 200 caracteres."),
-    description: z.string().trim().min(20, "Descreva o produto com mais detalhe."),
+    description: z.string().trim(),
     price: z.number().int().positive("Informe o valor atual."),
     compareAtPrice: z.number().int().nonnegative().nullable(),
     paymentInfo: z.string().trim().min(3, "Informe as formas de pagamento."),

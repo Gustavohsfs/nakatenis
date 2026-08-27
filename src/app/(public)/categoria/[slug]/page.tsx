@@ -4,6 +4,10 @@ import type { Metadata } from "next";
 import { PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { categoryRepo, productRepo } from "@/lib/data";
+import {
+  getCategoryBySlugCached,
+  listCategoryPageCached,
+} from "@/lib/data/cached";
 import type { ProductSort } from "@/lib/data/types";
 import { ProductGrid } from "@/components/product/product-card";
 import { CatalogControls } from "@/components/product/catalog-controls";
@@ -59,15 +63,21 @@ export async function generateMetadata({
 }: PageProps<"/categoria/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const raw = (await searchParams) as SearchParams;
-  const category = await categoryRepo.getBySlug(slug);
+  const category = await getCategoryBySlugCached(slug);
   if (!category) return buildMetadata({ title: "Categoria não encontrada", path: `/categoria/${slug}`, noIndex: true });
 
-  const { page } = parseParams(raw);
+  const { page, sort, minPrice, maxPrice } = parseParams(raw);
   const basePath = `/categoria/${slug}`;
-  const { totalPages } = await productRepo.listByCategory(slug, {
+  // Mesmos argumentos da página → o cache() devolve a MESMA promessa: a
+  // listagem é consultada uma única vez por requisição.
+  const { totalPages } = await listCategoryPageCached(
+    slug,
     page,
-    perPage: PER_PAGE,
-  });
+    PER_PAGE,
+    sort,
+    minPrice,
+    maxPrice,
+  );
 
   return buildMetadata({
     title: page > 1 ? `${category.name} — página ${page}` : category.name,
@@ -96,17 +106,11 @@ export default async function CategoryPage({
   const raw = (await searchParams) as SearchParams;
   const { page, sort, minPrice, maxPrice } = parseParams(raw);
 
-  const category = await categoryRepo.getBySlug(slug);
+  const category = await getCategoryBySlugCached(slug);
   if (!category || !category.isActive) notFound();
 
   const [result, priceRange] = await Promise.all([
-    productRepo.listByCategory(slug, {
-      page,
-      perPage: PER_PAGE,
-      sort,
-      minPrice,
-      maxPrice,
-    }),
+    listCategoryPageCached(slug, page, PER_PAGE, sort, minPrice, maxPrice),
     productRepo.priceRange(slug),
   ]);
 

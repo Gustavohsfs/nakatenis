@@ -1,4 +1,6 @@
-import { categoryRepo, userRepo } from "@/lib/data";
+import { cache } from "react";
+import { userRepo } from "@/lib/data";
+import { getPublicCategories } from "@/lib/data/cached";
 import { getSessionUser } from "@/lib/auth/guards";
 import type { DeliveryInfo } from "@/lib/whatsapp/build-message";
 import { CartDrawer } from "@/components/cart/cart-drawer";
@@ -12,7 +14,7 @@ import { CategorySidebar } from "./category-sidebar";
  * Só existe com usuário logado E endereço cadastrado — caso contrário o bloco
  * é omitido inteiro da mensagem (§5.5 do brief).
  */
-export async function getDeliveryInfo(): Promise<DeliveryInfo | null> {
+export const getDeliveryInfo = cache(async (): Promise<DeliveryInfo | null> => {
   const session = await getSessionUser();
   if (!session) return null;
   const user = await userRepo.getById(session.id);
@@ -32,7 +34,7 @@ export async function getDeliveryInfo(): Promise<DeliveryInfo | null> {
       zipCode: address.zipCode,
     },
   };
-}
+});
 
 export async function SiteShell({
   children,
@@ -44,7 +46,7 @@ export async function SiteShell({
   contentClassName?: string;
 }) {
   const [categories, delivery] = await Promise.all([
-    categoryRepo.list({ withCounts: true }),
+    getPublicCategories(),
     getDeliveryInfo(),
   ]);
 

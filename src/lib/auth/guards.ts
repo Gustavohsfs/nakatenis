@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "./index";
 
@@ -8,7 +9,9 @@ export type SessionUser = {
   role: "USER" | "ADMIN";
 };
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+// cache(): a mesma sessão é lida por Header, Shell e guards da página dentro
+// de um único render — decodificar o JWT uma vez por requisição basta.
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
   return {
@@ -17,7 +20,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     email: session.user.email,
     role: session.user.role ?? "USER",
   };
-}
+});
 
 /** Área da conta: sem sessão, manda para o login guardando o destino. */
 export async function requireUser(callbackPath = "/conta"): Promise<SessionUser> {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { MapPin, MessageCircle, Truck } from "lucide-react";
-import { categoryRepo } from "@/lib/data";
+import { getPublicCategories } from "@/lib/data/cached";
 import { getSessionUser } from "@/lib/auth/guards";
 import { whatsAppContactUrl } from "@/lib/whatsapp/build-message";
 import { Logo } from "./logo";
@@ -19,7 +19,7 @@ import {
  */
 export async function Header() {
   const [categories, user] = await Promise.all([
-    categoryRepo.list(),
+    getPublicCategories(),
     getSessionUser(),
   ]);
 

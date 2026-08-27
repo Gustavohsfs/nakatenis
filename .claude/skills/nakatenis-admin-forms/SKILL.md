@@ -43,6 +43,7 @@ Formulários simples (login, endereço, perfil) usam `useActionState` + `<form a
 - **Upload múltiplo**: `<ImageUploader images onChange folder max />` — drag-and-drop, preview, reordenação por setas, "tornar principal" (posição 0), remoção (que apaga do storage via `deleteUploadedImageAction`) e campo de texto alternativo por imagem.
 - **Slug**: não existe campo no formulário. Gerado do título na criação (colisão vira sufixo `-2`, `-3`) e **estável na edição** — mudar o título não muda a URL, para não quebrar links já compartilhados no WhatsApp. O hint sob o título mostra o endereço.
 - **Contador de caracteres**: descrição curta 200. Vira âmbar perto do limite.
+- **Descrição completa é opcional** — a PDP esconde a seção quando vazia. A descrição curta continua obrigatória: é ela que aparece no card e nas meta tags.
 - **SEO**: sem campos manuais. `generateMetadata` usa título + descrição curta como fallback; `metaTitle`/`metaDescription` continuam no schema do banco caso um dia voltem ao formulário.
 - **Exclusão**: sempre `<ConfirmDialog>`, com o nome do registro e a consequência escrita ("junto com N imagens no storage"). Excluir produto remove as imagens do storage antes do registro — depois não há mais `publicId`.
 - **`useWatch({ control, name })`**, não `watch()` — o `watch()` faz o React Compiler pular a memoização do componente inteiro.

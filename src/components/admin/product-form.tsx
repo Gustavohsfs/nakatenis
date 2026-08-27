@@ -44,7 +44,7 @@ const formSchema = z
       .trim()
       .min(10, "Mínimo de 10 caracteres.")
       .max(200, "Máximo de 200 caracteres."),
-    description: z.string().trim().min(20, "Descreva o produto com mais detalhe."),
+    description: z.string().trim(),
     price: z.number().int().positive("Informe o valor atual."),
     compareAtPrice: z.number().int().nonnegative(),
     paymentInfo: z.string().trim().min(3, "Informe as formas de pagamento."),
@@ -234,7 +234,7 @@ export function ProductForm({
               </Field>
 
               <Field>
-                <Label htmlFor="description">Descrição completa</Label>
+                <Label htmlFor="description">Descrição completa (opcional)</Label>
                 <Textarea
                   id="description"
                   rows={12}

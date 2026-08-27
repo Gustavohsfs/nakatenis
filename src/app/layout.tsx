@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toaster";
 import { CartHydrator } from "@/components/layout/header-actions";
 import { JsonLd } from "@/lib/seo/JsonLd";
@@ -51,11 +50,12 @@ export default function RootLayout({
     <html lang="pt-BR" className={inter.variable} data-scroll-behavior="smooth">
       <body className="min-h-dvh bg-surface-alt font-sans antialiased">
         <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
-        <SessionProvider>
-          <CartHydrator />
-          {children}
-          <Toaster />
-        </SessionProvider>
+        {/* Sem SessionProvider: nenhum componente usa useSession — a sessão
+            chega pronta do servidor, e o provider só gerava um vaivém de
+            /api/auth/session a cada navegação. */}
+        <CartHydrator />
+        {children}
+        <Toaster />
       </body>
     </html>
   );

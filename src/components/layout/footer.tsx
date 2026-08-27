@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Clock, MapPin, MessageCircle, Phone } from "lucide-react";
-import { categoryRepo } from "@/lib/data";
+import { getPublicCategories } from "@/lib/data/cached";
 import { whatsAppContactUrl, WHATSAPP_NUMBER } from "@/lib/whatsapp/build-message";
 import { Logo } from "./logo";
 
 export async function Footer() {
-  const categories = await categoryRepo.list();
+  const categories = await getPublicCategories();
   const year = new Date().getFullYear();
 
   return (

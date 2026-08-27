@@ -12,7 +12,8 @@ import {
   Truck,
   type LucideIcon,
 } from "lucide-react";
-import { categoryRepo, productRepo } from "@/lib/data";
+import { productRepo } from "@/lib/data";
+import { getPublicCategories } from "@/lib/data/cached";
 import { Button } from "@/components/ui/button";
 import { Badge, SectionTitle } from "@/components/ui";
 import { ProductCard, ProductGrid } from "@/components/product/product-card";
@@ -39,7 +40,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
 
 export default async function HomePage() {
   const [categories, featured, newest, discounted] = await Promise.all([
-    categoryRepo.list({ withCounts: true }),
+    getPublicCategories(),
     productRepo.list({ onlyFeatured: true, limit: 10 }),
     productRepo.list({ sort: "newest", limit: 8 }),
     productRepo.list({ onlyDiscounted: true, sort: "relevance", limit: 10 }),

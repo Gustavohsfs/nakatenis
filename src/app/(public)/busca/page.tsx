@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SearchX } from "lucide-react";
-import { categoryRepo, productRepo } from "@/lib/data";
+import { productRepo } from "@/lib/data";
+import { getPublicCategories } from "@/lib/data/cached";
 import type { Product, ProductSort } from "@/lib/data/types";
 import { ProductGrid } from "@/components/product/product-card";
 import { CatalogControls } from "@/components/product/catalog-controls";
@@ -58,7 +59,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/busca">) 
           perPage: PER_PAGE,
           totalPages: 1,
         }),
-    categoryRepo.list({ withCounts: true }),
+    getPublicCategories(),
     productRepo.priceRange(),
   ]);
 
