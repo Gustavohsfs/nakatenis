@@ -4,10 +4,10 @@ import { MessageCircle } from "lucide-react";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { useCartStore } from "@/stores/cart-store";
 import { useUiStore } from "@/stores/ui-store";
-import { buildWhatsAppUrl, type DeliveryInfo } from "@/lib/whatsapp/build-message";
+import { useCheckoutInfo } from "@/lib/checkout-info-client";
+import { buildWhatsAppUrl } from "@/lib/whatsapp/build-message";
 
 type Props = Omit<ButtonProps, "children" | "onClick"> & {
-  delivery?: DeliveryInfo | null;
   label?: string;
 };
 
@@ -16,11 +16,13 @@ type Props = Omit<ButtonProps, "children" | "onClick"> & {
  * A URL é montada no clique — assim reflete o carrinho no instante do envio.
  */
 export function WhatsAppCheckoutButton({
-  delivery,
   label = "Finalizar pedido pelo WhatsApp",
   ...buttonProps
 }: Props) {
   const toast = useUiStore((s) => s.toast);
+  // Endereço vem do cliente (/api/me/checkout-info): a página que renderiza
+  // este botão continua cacheável na borda.
+  const info = useCheckoutInfo();
 
   function handleClick() {
     const items = useCartStore.getState().items;
@@ -39,7 +41,7 @@ export function WhatsAppCheckoutButton({
         price: item.price,
         quantity: item.quantity,
       })),
-      delivery,
+      info?.delivery ?? null,
     );
     window.open(url, "_blank", "noopener,noreferrer");
   }

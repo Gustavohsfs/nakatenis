@@ -27,7 +27,6 @@ import { ProductActions } from "@/components/product/product-actions";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductCarousel } from "@/components/product/product-carousel";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { getDeliveryInfo } from "@/components/layout/site-shell";
 import { JsonLd } from "@/lib/seo/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, productJsonLd } from "@/lib/seo/json-ld";
 import { PRODUCT_FAQ } from "@/lib/seo/faq";
@@ -64,15 +63,17 @@ export async function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
 }
 
+// ISR: a página fica pronta em cache e é revalidada a cada 60s. Mutações do
+// admin chamam revalidatePath e purgam o cache do Next na hora — só a borda
+// espera até 60s. Requisito: NENHUMA leitura de sessão/cookie neste arquivo.
+export const revalidate = 60;
+
 export default async function ProductPage({ params }: PageProps<"/produto/[slug]">) {
   const { slug } = await params;
   const product = await getProductBySlugCached(slug);
   if (!product) notFound();
 
-  const [related, delivery] = await Promise.all([
-    productRepo.related(product.id, 10),
-    getDeliveryInfo(),
-  ]);
+  const related = await productRepo.related(product.id, 10);
 
   const savings = getSavings(product.price, product.compareAtPrice);
   const installment = getInstallment(product.price);
@@ -280,7 +281,6 @@ export default async function ProductPage({ params }: PageProps<"/produto/[slug]
                 compareAtPrice: product.compareAtPrice,
                 image: product.images[0]?.url ?? "/brand/placeholder.svg",
               }}
-              delivery={delivery}
             />
           </div>
 

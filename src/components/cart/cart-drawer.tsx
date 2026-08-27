@@ -12,11 +12,10 @@ import {
   useCartSubtotal,
 } from "@/stores/cart-store";
 import { formatBRL } from "@/lib/pricing";
-import type { DeliveryInfo } from "@/lib/whatsapp/build-message";
 import { CartLineItem } from "./cart-line-item";
 import { WhatsAppCheckoutButton } from "./whatsapp-checkout-button";
 
-export function CartDrawer({ delivery }: { delivery?: DeliveryInfo | null }) {
+export function CartDrawer() {
   const open = useUiStore((s) => s.cartDrawerOpen);
   const close = useUiStore((s) => s.closeCartDrawer);
   const items = useCartItems();
@@ -55,7 +54,7 @@ export function CartDrawer({ delivery }: { delivery?: DeliveryInfo | null }) {
                 {formatBRL(subtotal)}
               </span>
             </div>
-            <WhatsAppCheckoutButton block size="lg" delivery={delivery} />
+            <WhatsAppCheckoutButton block size="lg" />
             <Button variant="outline" block asChild>
               <Link href="/carrinho" onClick={close}>
                 Ver carrinho completo

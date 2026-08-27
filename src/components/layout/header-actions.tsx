@@ -17,13 +17,8 @@ import {
 import { signOut } from "next-auth/react";
 import { useCartCount, useCartHydrated, useCartStore } from "@/stores/cart-store";
 import { useUiStore } from "@/stores/ui-store";
+import { useCheckoutInfo } from "@/lib/checkout-info-client";
 import { cn } from "@/lib/utils";
-
-export type HeaderUser = {
-  name: string;
-  email: string;
-  role: "USER" | "ADMIN";
-} | null;
 
 /** Hidrata o carrinho persistido uma única vez, no cliente. */
 export function CartHydrator() {
@@ -123,11 +118,16 @@ export function NotificationsMenu() {
   );
 }
 
-export function AccountMenu({ user }: { user: HeaderUser }) {
+export function AccountMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useOutsideClose(ref, () => setOpen(false));
 
+  // Sessão buscada no cliente: o HTML da página é o mesmo para todo mundo e
+  // pode ser cacheado na borda. Enquanto carrega, mostra o estado anônimo —
+  // que é o que 95% dos visitantes veriam de qualquer forma.
+  const info = useCheckoutInfo();
+  const user = info?.user ?? null;
   const firstName = user?.name?.split(" ")[0];
 
   return (

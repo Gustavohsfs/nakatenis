@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { MapPin, MessageCircle, Truck } from "lucide-react";
 import { getPublicCategories } from "@/lib/data/cached";
-import { getSessionUser } from "@/lib/auth/guards";
 import { whatsAppContactUrl } from "@/lib/whatsapp/build-message";
 import { Logo } from "./logo";
 import { SearchBar } from "./search-bar";
@@ -18,10 +17,7 @@ import {
  * avisos, carrinho e menu de conta. Abaixo, a trilha de categorias no desktop.
  */
 export async function Header() {
-  const [categories, user] = await Promise.all([
-    getPublicCategories(),
-    getSessionUser(),
-  ]);
+  const categories = await getPublicCategories();
 
   return (
     <header className="sticky top-0 z-50 bg-brand-900 shadow-nav">
@@ -64,17 +60,7 @@ export async function Header() {
         <div className="ml-auto flex items-center gap-0.5 md:ml-0">
           <NotificationsMenu />
           <CartButton />
-          <AccountMenu
-            user={
-              user
-                ? {
-                    name: user.name ?? "Minha conta",
-                    email: user.email ?? "",
-                    role: user.role,
-                  }
-                : null
-            }
-          />
+          <AccountMenu />
         </div>
       </div>
 

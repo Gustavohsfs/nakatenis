@@ -20,6 +20,9 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+// ISR — mesmo racional da home.
+export const revalidate = 60;
+
 const FACTS = [
   {
     icon: Trophy,

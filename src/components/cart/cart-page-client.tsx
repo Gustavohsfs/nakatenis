@@ -14,18 +14,16 @@ import {
   useCartSubtotal,
 } from "@/stores/cart-store";
 import { formatBRL } from "@/lib/pricing";
-import type { DeliveryInfo } from "@/lib/whatsapp/build-message";
+import { useCheckoutInfo } from "@/lib/checkout-info-client";
 import { fetchFreshCartProducts } from "@/app/(public)/carrinho/actions";
 import { CartLineItem } from "./cart-line-item";
 import { WhatsAppCheckoutButton } from "./whatsapp-checkout-button";
 
-export function CartPageClient({
-  delivery,
-  isLoggedIn,
-}: {
-  delivery: DeliveryInfo | null;
-  isLoggedIn: boolean;
-}) {
+export function CartPageClient() {
+  // Sessão e endereço vêm do cliente — a página do carrinho é estática.
+  const info = useCheckoutInfo();
+  const delivery = info?.delivery ?? null;
+  const isLoggedIn = Boolean(info?.user);
   const hydrated = useCartHydrated();
   const items = useCartItems();
   const subtotal = useCartSubtotal();
@@ -187,7 +185,7 @@ export function CartPageClient({
               </span>
             </div>
 
-            <WhatsAppCheckoutButton block size="lg" delivery={delivery} />
+            <WhatsAppCheckoutButton block size="lg" />
 
             {delivery ? (
               <p className="rounded-lg bg-success-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-success-700">

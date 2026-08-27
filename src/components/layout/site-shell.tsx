@@ -1,8 +1,4 @@
-import { cache } from "react";
-import { userRepo } from "@/lib/data";
 import { getPublicCategories } from "@/lib/data/cached";
-import { getSessionUser } from "@/lib/auth/guards";
-import type { DeliveryInfo } from "@/lib/whatsapp/build-message";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { Header } from "./header";
 import { Footer } from "./footer";
@@ -10,32 +6,11 @@ import { MobileNav } from "./mobile-nav";
 import { CategorySidebar } from "./category-sidebar";
 
 /**
- * Monta os dados de entrega que entram na mensagem do WhatsApp.
- * Só existe com usuário logado E endereço cadastrado — caso contrário o bloco
- * é omitido inteiro da mensagem (§5.5 do brief).
+ * A moldura do site NÃO lê sessão nem cookies — de propósito. É isso que
+ * permite cachear as páginas públicas na borda. Tudo que depende do usuário
+ * (menu de conta, endereço na mensagem do WhatsApp) é buscado pelo navegador
+ * em /api/me/checkout-info depois do load.
  */
-export const getDeliveryInfo = cache(async (): Promise<DeliveryInfo | null> => {
-  const session = await getSessionUser();
-  if (!session) return null;
-  const user = await userRepo.getById(session.id);
-  if (!user) return null;
-  const address = user.addresses.find((a) => a.isDefault) ?? user.addresses[0];
-  if (!address) return null;
-  return {
-    name: user.name,
-    phone: user.phone,
-    address: {
-      street: address.street,
-      number: address.number,
-      complement: address.complement,
-      district: address.district,
-      city: address.city,
-      state: address.state,
-      zipCode: address.zipCode,
-    },
-  };
-});
-
 export async function SiteShell({
   children,
   withSidebar = false,
@@ -45,10 +20,7 @@ export async function SiteShell({
   withSidebar?: boolean;
   contentClassName?: string;
 }) {
-  const [categories, delivery] = await Promise.all([
-    getPublicCategories(),
-    getDeliveryInfo(),
-  ]);
+  const categories = await getPublicCategories();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -68,7 +40,7 @@ export async function SiteShell({
       <Footer />
 
       <MobileNav categories={categories} />
-      <CartDrawer delivery={delivery} />
+      <CartDrawer />
     </div>
   );
 }

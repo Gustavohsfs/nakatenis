@@ -31,6 +31,10 @@ export const metadata: Metadata = buildMetadata({
   path: "/",
 });
 
+// ISR: home pronta em cache, revalidada a cada 60s (e purgada na hora pelo
+// admin via revalidatePath). Nenhuma leitura de sessão neste arquivo.
+export const revalidate = 60;
+
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   racket: Tag,
   shoe: Footprints,

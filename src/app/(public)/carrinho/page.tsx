@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { getSessionUser } from "@/lib/auth/guards";
-import { getDeliveryInfo } from "@/components/layout/site-shell";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { CartPageClient } from "@/components/cart/cart-page-client";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -13,9 +11,7 @@ export const metadata: Metadata = buildMetadata({
   noIndex: true,
 });
 
-export default async function CartPage() {
-  const [delivery, user] = await Promise.all([getDeliveryInfo(), getSessionUser()]);
-
+export default function CartPage() {
   return (
     <div className="space-y-6">
       <Breadcrumbs items={[{ name: "Carrinho", path: "/carrinho" }]} />
@@ -29,7 +25,7 @@ export default async function CartPage() {
         </p>
       </header>
 
-      <CartPageClient delivery={delivery} isLoggedIn={Boolean(user)} />
+      <CartPageClient />
     </div>
   );
 }

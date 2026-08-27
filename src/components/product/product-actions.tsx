@@ -5,7 +5,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { MAX_QUANTITY } from "@/stores/cart-store";
-import { buildWhatsAppUrl, type DeliveryInfo } from "@/lib/whatsapp/build-message";
+import { useCheckoutInfo } from "@/lib/checkout-info-client";
+import { buildWhatsAppUrl } from "@/lib/whatsapp/build-message";
 
 type Props = {
   product: {
@@ -16,7 +17,6 @@ type Props = {
     compareAtPrice: number | null;
     image: string;
   };
-  delivery?: DeliveryInfo | null;
 };
 
 /**
@@ -24,8 +24,10 @@ type Props = {
  * "Comprar agora" monta um carrinho efêmero de 1 item e vai direto ao WhatsApp,
  * SEM tocar no carrinho persistido (§5.5 do brief).
  */
-export function ProductActions({ product, delivery }: Props) {
+export function ProductActions({ product }: Props) {
   const [quantity, setQuantity] = useState(1);
+  // Endereço buscado no cliente — a PDP fica cacheável na borda.
+  const info = useCheckoutInfo();
 
   function buyNow() {
     const url = buildWhatsAppUrl(
@@ -37,7 +39,7 @@ export function ProductActions({ product, delivery }: Props) {
           quantity,
         },
       ],
-      delivery,
+      info?.delivery ?? null,
     );
     window.open(url, "_blank", "noopener,noreferrer");
   }
